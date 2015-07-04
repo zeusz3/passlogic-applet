@@ -5,6 +5,7 @@
  */
 package PassLogic;
 
+import static java.lang.Math.floorMod;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
@@ -16,52 +17,46 @@ import java.util.TreeSet;
  */
 public class PassLogic extends javax.swing.JApplet {
     
-    private static final Hashtable<Byte, String> allowedSymbols = new Hashtable<Byte, String>(256);
+    private static final Hashtable<Integer, Character> allowedSymbols = new Hashtable<Integer, Character>(256);
     private static final char[] allSymbols = {'a', '<', 'b', ',', 'c', '.', 'd', '>', 'e', '?', 'f', '/', 'g', ';', 'h', ':', 'i',
     '|', 'j', '}', 'k', ']', 'l', '[', 'm', '{', 'n', '=', 'o', '+', 'p', '-', 'q', '_', 'r', ')', 's', '(', 't', '*', 'u', '&', 'v',
     '^', 'w', '%', 'x', '$', 'y', '#', 'z', '@', 'A', '!', 'B', '~', 'C','`', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
     'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
-    private static final TreeSet<String> bannedSymbols = new TreeSet<String>();
-    private static int outputlen = 12;
+    private static final TreeSet<Character> bannedSymbols = new TreeSet();
+    private static final int outputlen = 12;
     
     private static void initializeDict() {
-    	bannedSymbols.add("\"");
-    	bannedSymbols.add("\\");
-    	bannedSymbols.add("\'");
-        bannedSymbols.add("`");
-        bannedSymbols.add("~");
-        bannedSymbols.add("#");
-        bannedSymbols.add("%");
-        bannedSymbols.add("^");
-        bannedSymbols.add("(");
-        bannedSymbols.add(")");
-        bannedSymbols.add("-");
+    	bannedSymbols.add('\"');
+    	bannedSymbols.add('\\');
+    	bannedSymbols.add('\'');
+        bannedSymbols.add('`');
+        bannedSymbols.add('~');
+        bannedSymbols.add('#');
+        bannedSymbols.add('%');
+        bannedSymbols.add('^');
+        bannedSymbols.add('(');
+        bannedSymbols.add(')');
+        bannedSymbols.add('-');
         //bannedSymbols.add("+");
-        bannedSymbols.add("+");
-        bannedSymbols.add("{");
-        bannedSymbols.add("[");
-        bannedSymbols.add("}");
-        bannedSymbols.add("]");
-        bannedSymbols.add("|");
-        bannedSymbols.add(";");
-        bannedSymbols.add(":");
-        bannedSymbols.add("/");
-        bannedSymbols.add(".");
-        bannedSymbols.add(">");
-        bannedSymbols.add(",");
-        bannedSymbols.add("<");
-        bannedSymbols.add("=");
+        bannedSymbols.add('+');
+        bannedSymbols.add('{');
+        bannedSymbols.add('[');
+        bannedSymbols.add('}');
+        bannedSymbols.add(']');
+        bannedSymbols.add('|');
+        bannedSymbols.add(';');
+        bannedSymbols.add(':');
+        bannedSymbols.add('/');
+        bannedSymbols.add('.');
+        bannedSymbols.add('>');
+        bannedSymbols.add(',');
+        bannedSymbols.add('<');
+        bannedSymbols.add('=');
         int j = 0;
-    	for(int i = 0; i < 256; i++) {
-            if(!bannedSymbols.contains(String.valueOf(allSymbols[j % allSymbols.length]))) {
-                allowedSymbols.put((byte)i, String.valueOf(allSymbols[j % allSymbols.length]));
-            } else {
-                while(bannedSymbols.contains(String.valueOf(allSymbols[++j % allSymbols.length]))) {
-                        //j++;
-                }
-                allowedSymbols.put((byte)i, String.valueOf(allSymbols[j % allSymbols.length]));
+    	for(int i = 0; i < allSymbols.length; i++) {
+            if(!bannedSymbols.contains(allSymbols[i])) {
+                allowedSymbols.put(j++, allSymbols[i]);
             }
-            j++;
     	}
     }
 
@@ -268,16 +263,17 @@ public class PassLogic extends javax.swing.JApplet {
             hash[3] = md.digest(logic4TXTF.getText().getBytes());
             hash[4] = md.digest(logic5TXTF.getText().getBytes());
             StringBuilder sb = new StringBuilder(hash[0].length);
-            //sb.append(dict.get((byte)(hash[0][0] ^ hash[1][0])));
-            for(int i = 0; i < hash[0].length && i < outputlen*(hash[0].length/outputlen); i+=(hash[0].length/(outputlen))) {
+            for(int i = 0; i < hash[0].length; i++) {
                 int b = 0;
-                for (int j = 0; j < 5; j++) {
+                for(int j = 0; j < hash.length; j++) {
                     b ^= hash[j][i];
                 }
-                sb.append(allowedSymbols.get((byte)b));
+                sb.append(allowedSymbols.get(floorMod(b, allowedSymbols.size())));
             }
-            jTextField6.setText(sb.toString());
-            //editText2.setText(Integer.toHexString(hash[0]));
+            jTextField6.setText(sb.substring(0,outputlen) + " - ");
+            for(int i = 0, j=0; i < hash[0].length && j < outputlen; i+=hash[0].length/outputlen, j++) {
+                jTextField6.setText(jTextField6.getText().concat(String.valueOf(sb.charAt(i))));
+            }
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
